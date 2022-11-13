@@ -20,6 +20,7 @@ mongoose
 
 // **** middleware ***
 app.use(express.json());
+
 app.use("/api/auth", authRoute);
 
 //Connecting to Server at Port 4000
