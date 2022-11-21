@@ -3,8 +3,8 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const PORT = process.env.PORT;
-const userRoute = require("./routes/user");
 const authRoute = require("./routes/auth");
+const userRoute = require("./routes/user");
 
 //Connecting to mongoDb
 mongoose
@@ -20,8 +20,8 @@ mongoose
 
 // **** middleware ***
 app.use(express.json());
-
 app.use("/api/auth", authRoute);
+app.use("/api/users", userRoute);
 
 //Connecting to Server at Port 4000
 app.listen(PORT || 5000, () => {

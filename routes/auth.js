@@ -1,41 +1,59 @@
-const router = require("express").Router();
 const User = require("../models/User");
-const bcrypt = require("bcryptjs");
+const router = require("express").Router();
+const CryptoJS = require("crypto-js");
+const jwt = require("jsonwebtoken");
 
 //REGISTER
 router.post("/register", async (req, res) => {
-  // Encrypt the password
-  const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
-  const user = new User({
+  const newUser = new User({
     username: req.body.username,
     email: req.body.email,
-    password: hashedPassword,
+    //converting password into hashedpassword using cipher algorithm Advanced Encrypted Standard
+    password: CryptoJS.AES.encrypt(
+      req.body.password,
+      process.env.HASHED_PSW
+    ).toString(),
   });
   try {
-    const user = await user.save();
-    res.status(200).json(user); // new user successfully created and sent in JSON format
-  } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
+    const savedUser = await newUser.save();
+    res.status(200).json(savedUser);
+  } catch (error) {
+    res.status(500).json(error);
   }
 });
 
-// Login
+//LOGIN
 router.post("/login", async (req, res) => {
   try {
-    //find the username in database and store in user variable
+    //finding user in the database with the usernmae given in body
     const user = await User.findOne({
       username: req.body.username,
     });
-    // if no user send error
     !user && res.status(401).json("Wrong Credential");
-    //if user compare the userpassword and encrypted password from database
-    user && (await bcrypt.compare(req.body.password, user.password));
+    //converting password into original form
+    const originalPassword = CryptoJS.AES.decrypt(
+      user.password,
+      process.env.HASHED_PSW
+    ).toString(CryptoJS.enc.Utf8);
 
-    //send the data of user but dont send PASSWORD
+    originalPassword !== req.body.password &&
+      res.status(401).json("Wrong Credential");
+
+    // Creating jwt token
+    const accessToken = jwt.sign(
+      {
+        id: user._id,
+        isAdmin: user.isAdmin,
+      },
+      process.env.JWTSECRET_KEY,
+      { expiresIn: "3d" }
+    );
+
     const { password, ...others } = user._doc;
-    res.status(200).json(others);
-  } catch (error) {}
+    res.status(200).json({ ...others, accessToken });
+  } catch (error) {
+    res.status(500).json(error);
+  }
 });
+
 module.exports = router;
