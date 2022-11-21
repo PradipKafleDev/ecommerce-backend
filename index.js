@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const PORT = process.env.PORT;
 const authRoute = require("./routes/auth");
 const userRoute = require("./routes/user");
+const productRoute = require("./routes/product");
 
 //Connecting to mongoDb
 mongoose
@@ -22,6 +23,7 @@ mongoose
 app.use(express.json());
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
+app.use("/api/products", productRoute);
 
 //Connecting to Server at Port 4000
 app.listen(PORT || 5000, () => {
