@@ -34,9 +34,9 @@ router.put("/:id", verifyTokenAuthorization, async (req, res) => {
 });
 
 //DELETE THE Cart
-router.put("/:id", verifyTokenAuthorization, async (req, res) => {
+router.delete("/:id", verifyTokenAuthorization, async (req, res) => {
   try {
-    await Cart.findByIdAndUpdate(req.params.id);
+    await Cart.findByIdAndDelete(req.params.id);
     res.status(200).json("Cart has been deleted...");
   } catch (error) {
     res.status(500).json(error);
@@ -44,34 +44,20 @@ router.put("/:id", verifyTokenAuthorization, async (req, res) => {
 });
 
 //GET USER CART
-//
 router.get("/find/:userId", verifyTokenAuthorization, async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    res.status(200).json(product);
+    const cart = await Cart.findOne({ userId: req.params.userId });
+    res.status(200).json(cart);
   } catch (error) {
     res.status(500).json(error);
   }
 });
 
-//GET ALL PRODUCT
-router.get("/", async (req, res) => {
-  const qNew = req.query.new;
-  const qCategory = req.query.category;
+//GET ALL cart => only admin can see all the cart of user
+router.get("/", verifyTokenAndAdmin, async (req, res) => {
   try {
-    let products;
-    if (qNew) {
-      products = await Product.find().sort({ createdAt: -1 }).limit(5);
-    } else if (qCategory) {
-      products = await Product.find({
-        categories: {
-          $in: [qCategory],
-        },
-      });
-    } else {
-      products = await Product.find();
-    }
-    res.status(200).json(products);
+    const carts = await Cart.find();
+    res.status(200).json(carts);
   } catch (error) {
     res.status(500).json(error);
   }
